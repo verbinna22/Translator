@@ -5,11 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Translator"
         mc:Ignorable="d"
-        Title="Translator" Height="450" Width="800">
+        Title="Translator" Height="600" Width="800" ResizeMode="NoResize">
     <Grid>
-        <Label Content="Paskal ABC.NET" HorizontalAlignment="Left" Margin="77,10,0,0" VerticalAlignment="Top"/>
-        <Label Content="C#" HorizontalAlignment="Left" Margin="631,10,0,0" VerticalAlignment="Top"/>
-        <Button Content="&gt;&gt;&gt;&gt;" HorizontalAlignment="Left" Margin="423,10,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Label Content="Paskal ABC.NET" HorizontalAlignment="Left" Margin="77,10,0,0" VerticalAlignment="Top" FontSize="20"/>
+        <Label Content="C#" HorizontalAlignment="Left" Margin="631,10,0,0" VerticalAlignment="Top" FontSize="20"/>
+        <Button x:Name="translate" Content="&gt;&gt;&gt;&gt;" HorizontalAlignment="Center" Margin="0,11,0,0" VerticalAlignment="Top" Click="Button_Click" Height="42" Width="148"/>
+        <RichTextBox x:Name="textBlockIn" Height="500" VerticalAlignment="Top" Margin="32,57,481,0" FontSize="14">
+            <FlowDocument>
+                <Paragraph>
+                    <Run Text="Program MyProgram;"/>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+        <RichTextBox x:Name="textBlockOut" Height="500" VerticalAlignment="Top" Margin="484,57,29,0" FontSize="14">
+            <FlowDocument>
+                <Paragraph>
+                    <Run Text=""/>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
 
     </Grid>
 </Window>
