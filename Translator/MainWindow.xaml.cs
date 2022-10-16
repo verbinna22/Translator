@@ -77,11 +77,28 @@ namespace Translator
                 if (lexems[0].ToLower() == "program") comOut = DoIfProgram(lexems);
                 else if (lexems[0].ToLower() == "begin") comOut = DoIfBegin(lexems);
                 else if (lexems[0].ToLower() == "end.") comOut = DoIfEnd(lexems);
+                else if (lexems[0].ToLower() == "var") comOut = DoIfVar(lexems);
+                else if (CondiSet(lexems)) comOut = DoIfSet(lexems);
                 else if (lexems[0] == "") comOut = "";
-                else comOut = "\nError Lexem";
+                else comOut = "Error Lexem\n";
             }
             else comOut = "";
             return comOut;
+        }
+
+        public bool CondiSet(List<string> lexems)
+        {
+            if (lexems.Contains(":"))
+            {
+                if (lexems.IndexOf(":") != (lexems.Count - 1))
+                {
+                    if (lexems[lexems.IndexOf(":") + 1] != "=")
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public List<string> GenerateLexem(string line)
@@ -124,12 +141,12 @@ namespace Translator
             foreach (var lexem in lexems) name += lexem;
             ProgramName = name;
             output += name;
-            return output;
+            return output + "\n";
         }
 
         public string DoIfBegin(List<string> lexems)
         {
-            var output = "\nusing System;\nusing System.Collections.Generic;\n" +
+            var output = "using System;\nusing System.Collections.Generic;\n" +
                 "using System.Linq;\nusing System.Text;\n" +
                 $"namespace {ProgramName};\n"+"{\n" +
                 $"    class {ProgramName}\n" + "    {\n" +
@@ -148,6 +165,39 @@ namespace Translator
             var tempout = String.Empty;
             foreach (var lexem in lexems) tempout += lexem;
             output += TranslateCommand(tempout);
+            return output;
+        }
+
+        public string DoIfVar(List<string> lexems)
+        {
+            lexems.RemoveAt(0);
+            var tempout = String.Empty;
+            foreach (var lexem in lexems) tempout += lexem;
+            return TranslateCommand(tempout);
+        }
+
+        public string DoIfSet(List<string> lexems)
+        {
+            var output = String.Empty;
+            var validList = new List<string>();
+            validList.Add("char");
+            string type;
+            if (validList.Contains(lexems[lexems.Count - 1]))
+            {
+                type = lexems[lexems.Count - 1];
+            }
+            else
+            {
+                return "Error type\n";
+            }
+            int i = 0;
+            while (i < lexems.Count)
+            {
+                var lexem = lexems[i];
+                if (lexem == ":") break;
+                output += (type + " " + lexem + ";\n");
+                i++;
+            }
             return output;
         }
     }
