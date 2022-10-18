@@ -28,6 +28,15 @@ namespace Translator
 
         string ProgramName = "program1";
         List<string> varNames = new List<string>();
+        public enum variator
+        {
+            vari,
+            beginy,
+            noney
+        }
+
+        string exVars = String.Empty;
+        variator step = variator.noney;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -35,8 +44,11 @@ namespace Translator
             textBlockIn.Document.ContentStart,
             textBlockIn.Document.ContentEnd);
             var input = textRange.Text;
+            exVars = String.Empty;
+            step = variator.noney;
+            varNames = new List<string>();
             var output = Translate(input);
-            
+
             textBlockOut.Document.Blocks.Clear();
             textBlockOut.AppendText("// Program in C#\r");
             ((Paragraph)textBlockOut.Document.Blocks.FirstBlock).LineHeight = 5;
@@ -51,7 +63,7 @@ namespace Translator
                 if (cha == ';')
                 {
                     commands.Add(templine);
-                    
+
                     templine = String.Empty;
                 }
                 else
@@ -60,7 +72,7 @@ namespace Translator
                 }
             }
             commands.Add(templine);
-            
+
             var outputData = String.Empty;
             foreach (var cmd in commands)
             {
@@ -79,14 +91,19 @@ namespace Translator
             //MessageBox.Show(lexems[0]);
             if (lexems.Count > 0)
             {
-                if (lexems[0] == "program") comOut = DoIfProgram(lexems);
+                if (lexems[0] == "if") comOut = DoIfIf(lexems);
+                else if (lexems[0] == "else") comOut = DoIfElse(lexems);
+                else if (lexems[0] == "program") comOut = DoIfProgram(lexems);
                 else if (lexems[0] == "begin") comOut = DoIfBegin(lexems);
                 else if (lexems[0] == "end.") comOut = DoIfEnd(lexems);
+                else if (lexems[0] == "end") comOut = DoIfEnd2(lexems);
                 else if (lexems[0] == "var") comOut = DoIfVar(lexems);
+                
                 else if (CondiSet(lexems)) comOut = DoIfSet(lexems);
                 else if (CondiSeter(lexems)) comOut = DoIfSeter(lexems);
                 else if (lexems.Contains("writeln")) comOut = DoIfWriteln(lexems);
                 else if (lexems.Contains("write")) comOut = DoIfWrite(lexems);
+                
                 else if (lexems[0] == "") comOut = "";
                 else comOut = DoIfLine(lexems);
             }
@@ -129,14 +146,16 @@ namespace Translator
             var tempLine = String.Empty;
             foreach (var cha in line)
             {
-                if ((cha == ' ')||(cha == '\n') || (cha == '\r'))
+                if ((cha == ' ') || (cha == '\n') || (cha == '\r'))
                 {
                     lexemList.Add(tempLine.ToLower());
+                    //MessageBox.Show(tempLine);
                     tempLine = String.Empty;
                 }
-                else if ("+:=*/-(),".Contains(cha))
+                else if ("+:=*/-(),<>".Contains(cha))
                 {
                     lexemList.Add(tempLine.ToLower());
+                    //MessageBox.Show(tempLine);
                     lexemList.Add(cha.ToString());
                     tempLine = String.Empty;
                 }
@@ -146,13 +165,14 @@ namespace Translator
                 }
             }
             lexemList.Add(tempLine);
+            //MessageBox.Show(tempLine);
             int i = 0;
             while (i < lexemList.Count)
             {
                 if ("\n\t ".Contains(lexemList[i])) lexemList.RemoveAt(i);
                 else i++;
             }
-            
+
             return lexemList;
         }
         public string DoIfProgram(List<string> lexems)
@@ -170,11 +190,13 @@ namespace Translator
         {
             var output = "using System;\nusing System.Collections.Generic;\n" +
                 "using System.Linq;\nusing System.Text;\n" +
-                $"namespace {ProgramName};\n"+"{\n" +
+                $"namespace {ProgramName};\n" + "{\n" +
                 $"    class {ProgramName}\n" + "    {\n" +
                 "\tstatic void Main(string[] args)\n" + "\t{\n";
             lexems.RemoveAt(0);
             var tempout = String.Empty;
+            step = variator.beginy;
+            output += exVars;
             foreach (var lexem in lexems) tempout += (" " + lexem);
             output += TranslateCommand(tempout);
             return output;
@@ -190,11 +212,21 @@ namespace Translator
             return output;
         }
 
+        public string DoIfEnd2(List<string> lexems)
+        {
+            var output = "}\n";
+            lexems.RemoveAt(0);
+            var tempout = String.Empty;
+            foreach (var lexem in lexems) tempout += (" " + lexem);
+            output += TranslateCommand(tempout);
+            return output;
+        }
+
         public string DoIfVar(List<string> lexems)
         {
             lexems.RemoveAt(0);
             var tempout = String.Empty;
-            foreach (var lexem in lexems) tempout += (' '+lexem);
+            foreach (var lexem in lexems) tempout += (' ' + lexem);
             return TranslateCommand(tempout);
         }
 
@@ -228,7 +260,10 @@ namespace Translator
                 }
                 i++;
             }
-            return output;
+            if (step == variator.beginy) return output;
+            exVars += output;
+            MessageBox.Show(output);
+            return String.Empty;
         }
 
         public string TranslateType(string paskalType)
@@ -296,7 +331,7 @@ namespace Translator
                 var lexem = lexems[0];
                 lexems.RemoveAt(0);
                 if (lexem == "write") break;
-                tempOut += (lexem);
+                tempOut += (" " + lexem);
             }
             output += TranslateCommand(tempOut);
             output += "Console.Write";
@@ -306,9 +341,89 @@ namespace Translator
             {
                 var lexem = lexems[0];
                 lexems.RemoveAt(0);
-                tempOut += (lexem);
+                tempOut += (" " + lexem);
             }
             output += TranslateCommand(tempOut);
+            return output;
+        }
+
+        public string DoIfIf(List<string> lexems)
+        {
+            lexems.RemoveAt(0);
+            var output = "if ";
+            var tempOut = String.Empty;
+            //MessageBox.Show(lexems.Count.ToString());
+            while (lexems.Count > 0)
+            {
+                var lexem = lexems[0];
+                //MessageBox.Show(lexem);
+
+                if (lexem == "then") break;
+                tempOut += (" " + lexem);
+                lexems.RemoveAt(0);
+            }
+            if (lexems.Count != 0)
+            {
+                lexems.RemoveAt(0);
+                output += (" " + TranslateCommand(tempOut));
+            }
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "begin") output += "\n{\n";
+                lexems.RemoveAt(0);
+            }
+            tempOut = String.Empty;
+            while (lexems.Count > 0)
+            {
+                var lexem = lexems[0];
+                lexems.RemoveAt(0);
+                if (lexem == "end") break;
+                if (lexem == "else") break;
+                tempOut += (" " + lexem);
+            }
+            output += (" " + TranslateCommand(tempOut));
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "end") output += "}\n";
+                lexems.RemoveAt(0);
+            }
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "else") output += DoIfElse(lexems);
+            }
+            return output;
+        }
+
+        public string DoIfElse(List<string> lexems)
+        {
+            lexems.RemoveAt(0);
+            var output = "else ";
+            var tempOut = String.Empty;
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "begin")
+                {
+                    output += "\n{\n";
+                    lexems.RemoveAt(0);
+                }
+            }
+            while (lexems.Count > 0)
+            {
+                var lexem = lexems[0];
+                lexems.RemoveAt(0);
+                if (lexem == "end") break;
+                if (lexem == "else") break;
+                tempOut += (" " + lexem);
+            }
+            output += (" " + TranslateCommand(tempOut));
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "end") output += "}\n";
+            }
+            if (lexems.Count != 0)
+            {
+                if (lexems[0] == "else") output += DoIfElse(lexems);
+            }
             return output;
         }
         public string DoIfLine(List<string> lexems)
@@ -324,8 +439,9 @@ namespace Translator
                 else if (lexem == "not") output += "!";
                 else if (lexem == "div") output += "/";
                 else if (lexem == "mod") output += "%";
+                else if (lexem == "=") output += "==";
                 else if (varNames.Contains(lexem)) output += lexem;
-                else if ("+-/*();,".Contains(lexem)) output += lexem;
+                else if ("+-/*();><,".Contains(lexem)) output += lexem;
                 else if ("' \u0022".Contains(lexem[0])) output += lexem;
                 else if ("0123456789".Contains(lexem[0])) output += lexem;
                 else output = "\nError lexem";
