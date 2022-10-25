@@ -31,12 +31,13 @@ namespace Translator
         {
             textBlockIn.AppendText(@"
 var y:integer;
-                z: string;
-                x: real;
-                begin
-                    if (x = 0) then x:= 2;
-                    else x:= 2;
-            for y:= 50 downto 7 do Writeln(5);
+    z: string;
+    x: real;
+begin
+    x := 5;
+    if (x = 0) then x:= 2;
+    else x:= 2;
+    for y:= 50 downto 7 do Writeln(5);
 end.");
         }
 
@@ -54,19 +55,28 @@ end.");
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            TextRange textRange = new TextRange(
-            textBlockIn.Document.ContentStart,
-            textBlockIn.Document.ContentEnd);
-            var input = textRange.Text;
-            exVars = String.Empty;
-            step = variator.noney;
-            Inicializer(input);
+            try
+            {
+                TextRange textRange = new TextRange(
+                textBlockIn.Document.ContentStart,
+                textBlockIn.Document.ContentEnd);
+                var input = textRange.Text;
+                exVars = String.Empty;
+                step = variator.noney;
+                Inicializer(input);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void Inicializer(string input)
         {
             varNames = new List<string>();
-            ShowMessage();
+            if (new TextRange(
+            textBlockOut.Document.ContentStart,
+            textBlockOut.Document.ContentEnd).Text.Count() < 100) ShowMessage();
             var output = Translate(input);
             textBlockOut.Document.Blocks.Clear();
             textBlockOut.AppendText("// Program in C#\r");
@@ -76,12 +86,13 @@ end.");
 
         private static void ShowMessage()
         {
-            MessageBox.Show("Транслятор переводит с языка Paskal на С#." +
+            MessageBox.Show("Транслятор переводит с языка Pascal на С#." +
                             "Транслятор умеет: объявлять 5 типов переменных:" +
                             "char, integer, real, string, boolean; использовать базовые" +
                             "арифметические операции: *, /, +, -, DIV, MOD;" +
                             "логические: AND, OR, NOT, XOR; операцию присваивания :=" +
-                            "конструкции if-then-else, while и for." +
+                            "конструкции if-then-else, while и for; " +
+                            "сравнения =, >, <. " +
                             "Программа может не начинаться со слова program." +
                             "Переменные могут быть объявлены до блока begin");
         }
@@ -160,31 +171,15 @@ end.");
 
         public bool CondiSet(List<string> lexems)
         {
-            if (lexems.Contains(":"))
-            {
-                if (lexems.IndexOf(":") != (lexems.Count - 1))
-                {
-                    if (lexems[lexems.IndexOf(":") + 1] != "=")
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return lexems.Contains(":") && 
+                   lexems.IndexOf(":") != (lexems.Count - 1) &&
+                   lexems[lexems.IndexOf(":") + 1] != "=";
         }
 
         public bool CondiSeter(List<string> lexems)
         {
-            if (lexems.Contains(":"))
-            {
-                if (lexems.IndexOf(":") != (lexems.Count - 1))
-                {
-                    if (lexems[lexems.IndexOf(":") + 1] == "=")
-                    {
-                        return true;
-                    }
-                }
-            }
+            if ((lexems.Contains(":")) && (lexems.IndexOf(":") != (lexems.Count - 1)) &&
+                (lexems[lexems.IndexOf(":") + 1] == "=")) return true;
             return false;
         }
         public List<string> GenerateLexem(string line)
@@ -240,7 +235,7 @@ end.");
         {
             var output = "using System;\nusing System.Collections.Generic;\n" +
                 "using System.Linq;\nusing System.Text;\n" +
-                $"namespace {ProgramName};\n" + "{\n" +
+                $"namespace {ProgramName}\n" + "{\n" +
                 $"    class {ProgramName}\n" + "    {\n" +
                 "\tstatic void Main(string[] args)\n" + "\t{\n";
             lexems.RemoveAt(0);
